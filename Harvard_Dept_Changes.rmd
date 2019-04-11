@@ -16,11 +16,11 @@ library(viridis)
 library(lubridate)
 ```
 
-```{r load_file, echo=FALSE, ,message= FALSE, warning=FALSE}
-# Load the necessary data from the regristar website using download file
+```{r load_file, echo=FALSE, message=FALSE, warning=FALSE}
+# Load the necessary data from the regristar website using download file, cannot suppress True message
 
-download.file(url = "https://registrar.fas.harvard.edu/files/fas-registrar/files/class_enrollment_summary_by_term_3.22.19.xlsx", destfile = "spring_19.xlsx")
-download.file(url = "https://registrar.fas.harvard.edu/files/fas-registrar/files/class_enrollment_summary_by_term_03.06.18.xlsx", destfile = "spring_18.xlsx")
+download.file(url = "https://registrar.fas.harvard.edu/files/fas-registrar/files/class_enrollment_summary_by_term_3.22.19.xlsx", destfile = "spring_19.xlsx", quiet = TRUE)
+download.file(url = "https://registrar.fas.harvard.edu/files/fas-registrar/files/class_enrollment_summary_by_term_03.06.18.xlsx", destfile = "spring_18.xlsx", quiet = TRUE)
 
 
 # clean the data so that names our lowercase and read in after the third line
@@ -83,7 +83,7 @@ ggplot(course_change_2019, aes(x = percent_change, y = course_department, size =
   guides(size = guide_legend(title="Change in Students")) +
   
   theme(legend.position = "right") +
-  theme(plot.title = element_text(hjust = -5)) +
+  
   theme_fivethirtyeight()
 
 ```
