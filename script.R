@@ -28,6 +28,14 @@ file.remove(c("spring_19.xlsx","spring_18.xlsx","spring_17.xlsx","spring_16.xlsx
 
 
 
+course_change <- course_data %>% 
+  filter(!is.na(course_department)) %>% 
+  group_by(course_department, year) %>% 
+  summarize(total_enrollment = sum(total)) %>% 
+  mutate(enroll_change = total_enrollment - lag(total_enrollment, default=total_enrollment[1])) %>% 
+  mutate(percent_change = enroll_change/lag(total_enrollment, default = total_enrollment[1])) %>% 
+  filter(year != 2017) 
+
 
 
 
