@@ -1,0 +1,90 @@
+---
+title: "Harvard_Dept_Changes.rmd"
+author: "Will Smiles"
+date: "4/10/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE, echo=FALSE, message=FALSE}
+library(tidyverse)
+library(ggthemes)
+library(devtools)
+library(readxl)
+library(readr)
+library(janitor)
+library(viridis)
+library(lubridate)
+```
+
+```{r load_file, echo=FALSE, ,message= FALSE, warning=FALSE}
+# Load the necessary data from the regristar website using download file
+
+download.file(url = "https://registrar.fas.harvard.edu/files/fas-registrar/files/class_enrollment_summary_by_term_3.22.19.xlsx", destfile = "spring_19.xlsx")
+download.file(url = "https://registrar.fas.harvard.edu/files/fas-registrar/files/class_enrollment_summary_by_term_03.06.18.xlsx", destfile = "spring_18.xlsx")
+
+
+# clean the data so that names our lowercase and read in after the third line
+
+spring_19 = clean_names(read_xlsx("spring_19.xlsx", skip=3))
+spring_18 = clean_names(read_xlsx("spring_18.xlsx", skip=3))
+
+# Create Combined Course Data
+course_data <- bind_rows("2018" = spring_18, "2019"= spring_19, .id="year")
+
+# remove the files
+
+
+file.remove(c("spring_19.xlsx","spring_18.xlsx"))
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+# First group by departments and their respective years
+# NExt Find departmental enrollment change data by using the lag function which calculates change in enrollments from the prior year.  Then create new percentage  change variable which takes this change in enrollment and divides it by the previous years total enrollment
+course_change <- course_data %>% 
+  filter(!is.na(course_department)) %>% 
+  group_by(course_department, year) %>% 
+  summarize(total_enrollment = sum(total)) %>% 
+  mutate(enroll_change = total_enrollment - lag(total_enrollment, default=total_enrollment[1])) %>% 
+  mutate(percent_change = enroll_change/lag(total_enrollment, default = total_enrollment[1])) 
+
+
+# Filter for courses in 2019 and retrieve the top 10 biggest enrollment changes by weighting by the absolute value of the enrollment change. Order factors by increasing value of enrollment change 
+
+course_change_2019 <- course_change %>% 
+  filter(year ==  2019) %>% 
+  filter(!course_department %in% c("General Education","Faculty of Arts & Sciences", "No Department", "Special Concentrations")) %>% 
+  ungroup(course_department,year) %>% 
+  group_by(year) %>% 
+  top_n(10, wt=abs(enroll_change)) %>% 
+  arrange(enroll_change) %>% 
+  mutate(course_department = fct_rev(factor(course_department, levels = course_department[order(percent_change)])))
+
+
+
+ggplot(course_change_2019, aes(x = percent_change, y = course_department, size = abs(enroll_change), color=percent_change>0)) +
+  geom_point(alpha=.7)  + 
+  
+  scale_x_continuous(limit=c(-.6, 2), breaks = c(-.5, 0, .5, 1, 1.5, 2),
+                     labels = c("-0.5%","0%", "0.5%", "1%", "1.5%","2%")) +
+   
+  scale_size_area(breaks=c(200,300,400),
+                  labels = expression("200 students", "300 students", "400 students")) +
+  scale_color_manual(values =c( "red", "green"), labels=c("Negative", "Positive")) +
+  labs(title = "Enrollment Changes by Department ",
+       subtitle = "Harvard Courses: Spring 2018 - Spring 2019",
+       y = "Department",
+       x = "Percent Change",
+       caption = "Source: Harvard Registrar Enrollment Data") +
+  
+  guides(color = guide_legend(title="Direction of Change")) +
+  
+  guides(size = guide_legend(title="Change in Students")) +
+  
+  theme(legend.position = "right") +
+  theme(plot.title = element_text(hjust = -5)) +
+  theme_fivethirtyeight()
+
+```
+
