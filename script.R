@@ -36,6 +36,45 @@ course_change <- course_data %>%
   mutate(percent_change = enroll_change/lag(total_enrollment, default = total_enrollment[1])) %>% 
   filter(year != 2017) 
 
+# course_change_2018 <- course_change %>% 
+#   filter(year ==  2019) %>% 
+#   filter(!course_department %in% c("General Education","Faculty of Arts & Sciences", "No Department", "Special Concentrations")) %>% 
+#   ungroup(course_department,year) %>% 
+#   group_by(year) %>% 
+#   top_n(10, wt=abs(percent_change)) %>% 
+#   arrange(desc(year),abs(enroll_change))
+
+course_change_2019 <- course_change %>% 
+  filter(year ==  2019) %>% 
+  filter(!course_department %in% c("General Education","Faculty of Arts & Sciences", "No Department", "Special Concentrations")) %>% 
+  ungroup(course_department,year) %>% 
+  group_by(year) %>% 
+  top_n(10, wt=abs(enroll_change)) %>% 
+  arrange(enroll_change)
+
+ggplot(course_change_2019, aes(x = percent_change, y = course_department, size = abs(enroll_change), color=percent_change>0)) +
+  geom_point(alpha=.7)  + 
+  
+  scale_size_area(breaks=c(200,300,400),
+                  labels = expression("200 students", "300 students", "400 students")) +
+  scale_color_manual(values =c( "red", "green"), labels=c("Negative", "Positive")) +
+  labs(title = "Largest Enrollment Changes by Harvard Department ",
+       subtitle = "Harvard  2018-2019",
+       y = "Department",
+       x = "Percent Change",
+       caption = "Source: Harvard Registrar Enrollment Data") +
+  
+  guides(color = guide_legend(title="Direction of Change")) +
+  
+  guides(size = guide_legend(title="Change in Students")) +
+  
+  theme(legend.position = "right")
+
+
+# p_2018 <- ggplot(course_change_2018, aes(x = percent_change , y = course_department, size = abs(enroll_change))) +
+#   geom_point(alpha = .7,
+#              show.legend = TRUE)
+
 
 
 
