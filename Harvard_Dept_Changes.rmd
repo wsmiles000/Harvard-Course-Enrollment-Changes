@@ -62,7 +62,7 @@ course_change_2019 <- course_change %>%
   mutate(course_department = fct_rev(factor(course_department, levels = course_department[order(percent_change)])))
 
 
-
+# Add five_thirty_eight theme, change color theme by making plots green for positive changes and red for negative changes
 ggplot(course_change_2019, aes(x = percent_change, y = course_department, size = abs(enroll_change), color=percent_change>0)) +
   geom_point(alpha=.7)  + 
   
